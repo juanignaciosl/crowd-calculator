@@ -7,7 +7,7 @@ LANGUAGE plpgsql SECURITY DEFINER
 RETURNS NULL ON NULL INPUT
 AS $$
 DECLARE
-text sql;
+sql text;
 BEGIN
 
 sql := 'WITH n(name, the_geom) AS (VALUES('
