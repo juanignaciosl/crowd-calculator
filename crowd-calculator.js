@@ -51,9 +51,24 @@ function enableDrawing(map) {
     var type = e.layerType,
         layer = e.layer;
 
-    var geoJSON = JSON.stringify(layer.toGeoJSON());
-    console.dir(geoJSON);
+    var geoJSON = "'" + JSON.stringify(layer.toGeoJSON().geometry) + "'";
 
-    map.addLayer(layer);
+    var sql = "select crowd_calculator_insert_leaflet_data('crowd-01', " + geoJSON + ")";
+    console.log('Sending...');
+    $.ajax({
+      type: 'POST',
+      url: 'https://juanignaciosl.cartodb.com/api/v2/sql',
+      crossDomain: true,
+      data: { q: sql },
+      dataType: 'json',
+      success: function(responseData, textStatus, jqXHR) {
+        console.log('done');
+
+        map.addLayer(layer);
+      },
+      error: function(responseData, textStatus, errorThrown) {
+        console.log('error', errorThrown);
+      }
+    });
   });
 }
