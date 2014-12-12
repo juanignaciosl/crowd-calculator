@@ -7,11 +7,15 @@
     <script src="leaflet/leaflet.draw.js"></script>
 
     <style>
-      html, body { width:100%; height:100%; padding: 0; margin: 0; }
+      html, body { width:100%; height:100%; padding: 0; margin: 0; 
+        font-family: Helvetica, sans-serif;
+        font-size: 14px;
+        color: #666666;
+      }
+
       #cartodb-map { width: 100%; height:100%; background: black; }
       #estimation {
         padding: 20px;
-        font-family: Helvetica, sans-serif;
         font-size: 36px;
         position: fixed;
         bottom: 20px;
@@ -19,12 +23,33 @@
         background: rgba(0,0,0,.5);
         color: white;
       }
+      #crowds {
+        position: fixed;
+        top: 20px;
+        right: 200px;
+        padding: 5px 10px;
+        background: white;
+        box-shadow: rgba(0, 0, 0, 0.2) 0 0 4px 2px;
+        border-radius: 4px;
+        white-space: nowrap;
+      }
+      select {
+        margin-left: 10px;
+      }
     </style>
 
     <script src="crowd-calculator.js"></script>
   </head>
   <body onload="init()">
     <div id='cartodb-map'></div>
+    <div id='crowds'>
+      Choose saved crowd
+      <select id='crowd-selection' disabled onchange='loadCrowd(this.options[this.selectedIndex].value)'>
+        <option></option>
+      </select>
+      or enter name
+      <input id='crowd-name' type='text' value='' disabled />
+    </div>
     <div id='estimation'>
       <div><span id='area'>0</span> m&sup2;</div>
       <div><span id='people'>0</span> people</div>

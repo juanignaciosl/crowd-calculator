@@ -1,4 +1,5 @@
 var map;
+var loadedCrowd;
 var areas = {};
 
 var SQL_API_URL = 'https://juanignaciosl.cartodb.com/api/v2/sql';
@@ -33,6 +34,8 @@ function init() {
     mapDiv.appendChild(v.render().el);
 
     enableDrawing(map);
+
+    loadSavedCrowds('crowd-selection');
   });
 }
 
@@ -55,12 +58,18 @@ function enableDrawing(map) {
   map.addControl(drawControl);
 
   map.on('draw:created', function (e) {
+    var crowdName = document.getElementById('crowd-name').value;
+    if(crowdName === '') {
+      alert('Please set crowd name before editing');
+      return;
+    }
+
     var type = e.layerType,
         layer = e.layer;
 
     var geoJSON = "'" + JSON.stringify(layer.toGeoJSON().geometry) + "'";
 
-    var sql = "select crowd_calculator_insert_leaflet_data('crowd-01', " + geoJSON + ")";
+    var sql = "select crowd_calculator_insert_leaflet_data('" + crowdName + "', " + geoJSON + ")";
     console.log('Sending...');
     $.ajax({
       type: 'POST',
@@ -112,4 +121,53 @@ function updateEstimation(areas) {
   areaSpan.innerText = area.toFixed(2);
   var peopleSpan = document.getElementById('people');
   peopleSpan.innerText = (area * LOW_DENSITY).toFixed() + ' < ' + (area * MEDIUM_DENSITY).toFixed() + ' < ' + (area * HIGH_DENSITY).toFixed();
+}
+
+function loadSavedCrowds(selectId) {
+  var selectCrowdsSql = 'select distinct crowd_name from crowd_data order by crowd_name';
+  var select = $('#'+selectId);
+  $.getJSON(SQL_API_URL + '/?q='+selectCrowdsSql, function(data) {
+    $.each(data.rows, function(key, val) {
+      var crowdName = val.crowd_name;
+      select.append('<option value="' + crowdName + '">' + crowdName + '</option>');
+    });
+  });
+
+  select.attr('disabled', false);
+  document.getElementById('crowd-name').disabled = false;
+}
+
+function loadCrowd(crowdName) {
+  cleanMap();
+
+  var crowdNameField = document.getElementById('crowd-name');
+  crowdNameField.value = crowdName;
+  if(crowdName == '') {
+    crowdNameField.disabled = false;
+  } else {
+    crowdNameField.disabled = true;
+    var layerUrl = "http://team.cartodb.com/api/v2/viz/13e13fd6-81fb-11e4-8dbe-0e4fddd5de28/viz.json"
+    var subLayerOptions = {
+      sql: "select * from crowd_data where crowd_name = '" + crowdName + "'"
+    }
+    cartodb.createLayer(map, layerUrl, {
+      legends: false
+    })
+    .on('done', function(layer) {
+      loadedCrowd = layer;
+      layer.getSubLayer(0).set(subLayerOptions);
+      layer.addTo(map);
+    }).on('error', function() {
+      console.log('error', error);
+    });
+
+  }
+
+}
+
+function cleanMap() {
+  if(loadedCrowd) {
+    loadedCrowd.remove();
+    loadedCrowd = null;
+  }
 }
