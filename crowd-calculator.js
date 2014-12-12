@@ -1,6 +1,7 @@
 var map;
 var loadedCrowd;
 var areas = {};
+var layers = [];
 var cartodbIds = {};
 
 var SQL_API_URL = 'https://juanignaciosl.cartodb.com/api/v2/sql';
@@ -84,6 +85,7 @@ function enableDrawing(map) {
         var cartodbId = responseData.rows[0].crowd_calculator_insert_leaflet_data;
         updateArea(cartodbId);
 
+        layers.push(layer);
         map.addLayer(layer);
       },
       error: function(responseData, textStatus, errorThrown) {
@@ -183,6 +185,10 @@ function loadAreas(cartodbIds) {
 }
 
 function cleanMap() {
+  layers.map(function(layer) {
+    map.removeLayer(layer);
+  });
+  layers = [];
   areas = {};
   updateEstimation();
   if(loadedCrowd) {
