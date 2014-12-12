@@ -24,5 +24,33 @@ function init() {
     var v = cdb.vis.Overlay.create('search', map.viz, {})
     v.show();
     mapDiv.appendChild(v.render().el);
+
+    enableDrawing(map);
+  });
+}
+
+function enableDrawing(map) {
+  var drawnItems = new L.FeatureGroup();
+  map.addLayer(drawnItems);
+
+  var drawControl = new L.Control.Draw({
+      edit: {
+          featureGroup: drawnItems
+      },
+      draw: {
+        polygon: true,
+        rectangle: false,
+        circle: false,
+        marker: false,
+        polyline: false
+      }
+  });
+  map.addControl(drawControl);
+
+  map.on('draw:created', function (e) {
+    var type = e.layerType,
+        layer = e.layer;
+
+    map.addLayer(layer);
   });
 }
