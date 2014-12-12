@@ -51,6 +51,9 @@ function enableDrawing(map) {
     var type = e.layerType,
         layer = e.layer;
 
+    var geoJSON = JSON.stringify(layer.toGeoJSON());
+    console.dir(geoJSON);
+
     map.addLayer(layer);
   });
 }
