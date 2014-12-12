@@ -1,4 +1,11 @@
 var map;
+var areas = {};
+
+var SQL_API_URL = 'https://juanignaciosl.cartodb.com/api/v2/sql';
+
+var LOW_DENSITY = 1;
+var MEDIUM_DENSITY = 2.5;
+var HIGH_DENSITY = 4;
 
 function init() {
   var mapId = 'cartodb-map';
@@ -57,12 +64,21 @@ function enableDrawing(map) {
     console.log('Sending...');
     $.ajax({
       type: 'POST',
-      url: 'https://juanignaciosl.cartodb.com/api/v2/sql',
+      url: SQL_API_URL,
       crossDomain: true,
       data: { q: sql },
       dataType: 'json',
       success: function(responseData, textStatus, jqXHR) {
         console.log('done');
+
+        var cartodbId = responseData.rows[0].crowd_calculator_insert_leaflet_data;
+        calculateArea(cartodbId, function(area) {
+          console.log('area', area);
+          areas[cartodbId] = area;
+          updateEstimation(areas);
+        }, function(error) {
+          console.log('error', error);
+        });
 
         map.addLayer(layer);
       },
@@ -71,4 +87,29 @@ function enableDrawing(map) {
       }
     });
   });
+}
+
+function calculateArea(cartodbId, successCallback, errorCallback) {
+  $.ajax({
+    type: 'GET',
+    url: SQL_API_URL,
+    crossDomain: true,
+    data: { q: 'SELECT ST_Area(the_geom::geography) as area FROM crowd_data where cartodb_id = ' + cartodbId },
+    dataType: 'json',
+    success: function(responseData, textStatus, jqXHR) {
+      successCallback(responseData.rows[0].area);
+    },
+    error: function(responseData, textStatus, jqXHR) {
+      errorCallback(responseData.responseText);
+    }
+  });
+}
+
+function updateEstimation(areas) {
+  var areaSpan = document.getElementById('area');
+  var area = 0;
+  for(cartodbId in areas) { area += areas[cartodbId]; }
+  areaSpan.innerText = area.toFixed(2);
+  var peopleSpan = document.getElementById('people');
+  peopleSpan.innerText = (area * LOW_DENSITY).toFixed() + ' < ' + (area * MEDIUM_DENSITY).toFixed() + ' < ' + (area * HIGH_DENSITY).toFixed();
 }
