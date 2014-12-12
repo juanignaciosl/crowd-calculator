@@ -96,7 +96,7 @@ function enableDrawing(map) {
 function updateArea(cartodbId) {
   calculateArea(cartodbId, function(area) {
     areas[cartodbId] = area;
-    updateEstimation(areas);
+    updateEstimation();
   }, function(error) {
     console.log('error', error);
   });
@@ -118,7 +118,7 @@ function calculateArea(cartodbId, successCallback, errorCallback) {
   });
 }
 
-function updateEstimation(areas) {
+function updateEstimation() {
   var areaSpan = document.getElementById('area');
   var area = 0;
   for(cartodbId in areas) { area += areas[cartodbId]; }
@@ -183,6 +183,8 @@ function loadAreas(cartodbIds) {
 }
 
 function cleanMap() {
+  areas = {};
+  updateEstimation();
   if(loadedCrowd) {
     loadedCrowd.remove();
     loadedCrowd = null;
